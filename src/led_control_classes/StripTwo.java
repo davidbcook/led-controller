@@ -6,7 +6,7 @@ public class StripTwo extends Thread{
 
 	private TestObserver testObserver;
 	private DeviceRegistry registry;
-	static EventPulse eventPulseThread;
+	static EventReplayer eventReplayerThread;
 
 	public StripTwo(TestObserver observer, DeviceRegistry registry) {
 		this.testObserver = observer;
@@ -19,8 +19,8 @@ public class StripTwo extends Thread{
 		while (true) {
 
 			try {
-				eventPulseThread = new EventPulse(testObserver, registry);
-				eventPulseThread.start();
+				eventReplayerThread = new EventReplayer(testObserver, registry);
+				eventReplayerThread.start();
 
 
 				// Slow the thread down so that it executes once a minute

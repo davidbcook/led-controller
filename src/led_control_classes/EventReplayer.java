@@ -26,7 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class EventPulse extends Thread {
+public class EventReplayer extends Thread {
 
 	private TestObserver testObserver;
 	private DeviceRegistry registry;
@@ -35,7 +35,7 @@ public class EventPulse extends Thread {
 	private URL event_two;
 	private URL event_three;
 
-	public EventPulse(TestObserver observer, DeviceRegistry registry) {
+	public EventReplayer(TestObserver observer, DeviceRegistry registry) {
 		this.testObserver = observer;
 		this.registry = registry;
 	}
@@ -99,7 +99,6 @@ public class EventPulse extends Thread {
 			}
 
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -118,16 +117,18 @@ public class EventPulse extends Thread {
 					List<Strip> strips = registry.getStrips();
 
 					Strip pulseStrip = strips.get(0);
+					long eventTime = eventList.get(x).getTimestring().getTimeInMillis();
 
-					System.out.println("pulses index: " + x + " pulses sent: " + pulseCount + " event time: " + eventList.get(x).getTimestring().getTimeInMillis() + " system time: " + System.currentTimeMillis()); 
+					System.out.println("pulses index: " + x + " pulses sent: " + pulseCount + " event time: " + eventTime + " system time: " + System.currentTimeMillis()); 
 
-					// if the time of the event hasn't happened yet, then we haven't sent a pulse yet
-					if (eventList.get(x).getTimestring().getTimeInMillis() > System.currentTimeMillis()) {
-						// while the time of the event is greater than the current time, wait and keep checking to see if the time of the event ~= the current time
-						while (eventList.get(x).getTimestring().getTimeInMillis() > System.currentTimeMillis()) {
-							// millisecond precision is unnecessary and makes it more likely we'll miss a pulse 
+					// If the adjusted time of the event hasn't happened yet, then we haven't sent a pulse yet
+					if (eventTime > System.currentTimeMillis()) {
+						// While the time of the event is greater than the current time, wait and keep checking to see if the time of the event ~= the current time
+						while (eventTime > System.currentTimeMillis()) {
+							// If the eventTime is within 10 milliseconds of system time, that's close enough, so send the pulse 
 							// As soon as we start the pulse thread, we move on to the next event in the list to avoid sending multiple pulses for the same event
-							if (Math.floor(eventList.get(x).getTimestring().getTimeInMillis()/10) - Math.floor(System.currentTimeMillis()/10) == 0) {
+							if (eventTime - System.currentTimeMillis() <= 10) {
+								// Look at properties of the event object to determine the color and speed of each pulse
 								if (eventList.get(x).getEvent() == "<EVENT NAME>" && eventList.get(x).getOutcome()) {
 									System.out.println("sending white pulse");
 									pulseThread = new LEDPulse(pulseStrip, 0xffffff, 10);
@@ -152,7 +153,7 @@ public class EventPulse extends Thread {
 				}
 
 				// Slow the thread down
-				sleep(100);
+				sleep(20);
 			} catch (InterruptedException e) {
 				System.out.println("interrupted");
 			};
@@ -177,10 +178,8 @@ public class EventPulse extends Thread {
 			}
 			in.close();
 		} catch (ProtocolException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return response.toString();
