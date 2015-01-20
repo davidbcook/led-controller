@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Gets the build status of specific Bamboo builds from your Bamboo instance
+# Gets the build status of specific Bamboo builds from your Bamboo instance. This should be run every couple minutes on your machine using something like cron.
 
 import requests
 
